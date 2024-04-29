@@ -199,6 +199,7 @@ latex_100 <- stargazer(data100, summary = FALSE)
 writeLines(latex_100, file.path("latex_100.txt"))
 
 ################################################################################
+
 # (3) Run 1000 simulations for sample size 200 #
 
 # define sample size and number of repeats 
@@ -344,6 +345,7 @@ latex_200 <- stargazer(data200, summary = FALSE)
 writeLines(latex_200, file.path("latex_200.txt"))
 
 ################################################################################
+
 # (4) Run 1000 simulations for sample size 500 #
 
 # define sample size and number of repeats 
@@ -489,6 +491,7 @@ latex_500 <- stargazer(data500, summary = FALSE)
 writeLines(latex_500, file.path("latex_500.txt"))
 
 #########################################################################
+
 # (5) Run 1000 simulations for sample size 1000 #
 
 # define sample size and number of repeats 
@@ -566,19 +569,19 @@ mean_ate_1000_2ik <- mean(ate_1000_2ik)
 mean_ate_1000_hik <- mean(ate_1000_hik)
 mean_ate_1000_cv <- mean(ate_1000_cv)
 
-# mean bias over replicates
+# bias over replicates
 bias_ate_1000_ik <- mean_ate_1000_ik - true_ate
 bias_ate_1000_2ik <- mean_ate_1000_2ik - true_ate
 bias_ate_1000_hik <- mean_ate_1000_hik - true_ate
 bias_ate_1000_cv <- mean_ate_1000_cv - true_ate
 
-# mean var over replicates
+# var over replicates
 var_ate_1000_ik <- var(ate_1000_ik)
 var_ate_1000_2ik <- var(ate_1000_2ik)
 var_ate_1000_hik <- var(ate_1000_hik)
 var_ate_1000_cv <- var(ate_1000_cv)
 
-# mean mse over replicates
+# mse over replicates
 mse_ate_1000_ik <- bias_ate_1000_ik^2 + var_ate_1000_ik
 mse_ate_1000_2ik <- bias_ate_1000_2ik^2 + var_ate_1000_2ik
 mse_ate_1000_hik <- bias_ate_1000_hik^2 + var_ate_1000_hik
@@ -631,6 +634,7 @@ writeLines(latex_1000, file.path("latex_1000.txt"))
 
 
 ################################################################################
+
 # (6) Plot MSE, bias and variance for increasing sample size #
 
 # create data set for IK bandwidth with all sample sizes
@@ -655,11 +659,11 @@ ggplot(data_ik, aes(x = sample_size)) +
 
 ggsave("bvm_ik.pdf")
 
-# Save in Latex Table
+# Save in Latex Table (Table 4)
 latex_ik <- stargazer(data_ik, summary = FALSE)
 writeLines(latex_ik, file.path("latex_ik.txt"))
 
-#### Do the same for other bandwidths (not included in thesis) ###
+### Do the same for other bandwidths (not included in thesis) ###
 # 2IK #
 data_2ik = data.frame(sample_size = c(100, 200, 500, 1000),
                       bias_2ik = c(bias_ate_100_2ik, bias_ate_200_2ik, bias_ate_500_2ik, bias_ate_1000_2ik),
