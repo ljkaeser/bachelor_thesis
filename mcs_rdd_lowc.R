@@ -519,72 +519,84 @@ for (i in 1:n_reps) {
   y <- ifelse(x < c, m_neg(x), m_pos(x) ) + rnorm(n, sd = 0.5) # add normal error term
   w <- ifelse(x<c,0,1) 
   
-  
+  # calculate and store IK bandwidth 
   h_IK_rdrobust_2014 <- rdbwselect_2014(y,x,c=0,p=1, kernel = "tri", bwselect = "IK")
   h_IK <- h_IK_rdrobust_2014$bws[1]
   h_1000_ik[i] <- h_IK 
   
+  # calculate and store 2IK bandwidth 
   h_2IK <- 2*h_IK
   h_1000_2ik[i] <- h_2IK 
   
+  # calculate and store hIK bandwidth 
   h_hIK <- 0.5*h_IK
   h_1000_hik[i] <- h_hIK
   
+  # calculate and store CV bandwidth 
   h_CV_rdrobust_2014 <- rdbwselect_2014(y=y, x = x, bwselect = "CV")
   h_CV <- h_CV_rdrobust_2014$bws[1]
   h_1000_cv[i] <- h_CV
   
+  # calculate and store effective sample sizes
   n_1000_h_ik[i] <- sum(x >= (c - h_IK) & x <= (c + h_IK))
   n_1000_h_2ik[i] <- sum(x >= (c - h_2IK) & x <= (c + h_2IK))
   n_1000_h_hik[i] <- sum(x >= (c - h_hIK) & x <= (c + h_hIK))
   n_1000_h_cv[i] <- sum(x >= (c - h_CV) & x <= (c + h_CV))
   
-  # Estimation of ATE using RDD
+  # estimation of ATE using IK bandwidth
   rdd_result_IK <- rdrobust(y, x, c = 0, h = h_IK)
   ate_1000_ik[i] <- rdd_result_IK$coef[1]
   
+  # estimation of ATE using 2IK bandwidth
   rdd_result_2IK <- rdrobust(y, x, c = 0, h = h_2IK)
   ate_1000_2ik[i] <- rdd_result_2IK$coef[1]
   
+  # estimation of ATE using hIK bandwidth
   rdd_result_hIK <- rdrobust(y, x, c = 0, h = h_hIK)
   ate_1000_hik[i] <- rdd_result_hIK$coef[1]
   
+  # estimation of ATE using CV bandwidth
   rdd_result_CV <- rdrobust(y, x, c = 0, h = h_CV)
   ate_1000_cv[i] <- rdd_result_CV$coef[1]
 }
 
-# Compare the estimated treatment effects to the true treatment effect
+# mean ate over replicates
 mean_ate_1000_ik <- mean(ate_1000_ik)
 mean_ate_1000_2ik <- mean(ate_1000_2ik)
 mean_ate_1000_hik <- mean(ate_1000_hik)
 mean_ate_1000_cv <- mean(ate_1000_cv)
 
+# mean bias over replicates
 bias_ate_1000_ik <- mean_ate_1000_ik - true_ate
 bias_ate_1000_2ik <- mean_ate_1000_2ik - true_ate
 bias_ate_1000_hik <- mean_ate_1000_hik - true_ate
 bias_ate_1000_cv <- mean_ate_1000_cv - true_ate
 
+# mean var over replicates
 var_ate_1000_ik <- var(ate_1000_ik)
 var_ate_1000_2ik <- var(ate_1000_2ik)
 var_ate_1000_hik <- var(ate_1000_hik)
 var_ate_1000_cv <- var(ate_1000_cv)
 
+# mean mse over replicates
 mse_ate_1000_ik <- bias_ate_1000_ik^2 + var_ate_1000_ik
 mse_ate_1000_2ik <- bias_ate_1000_2ik^2 + var_ate_1000_2ik
 mse_ate_1000_hik <- bias_ate_1000_hik^2 + var_ate_1000_hik
 mse_ate_1000_cv <- bias_ate_1000_cv^2 + var_ate_1000_cv
 
+# mean h over replicates
 mean_h_1000_ik <- mean(h_1000_ik)
 mean_h_1000_2ik <- mean(h_1000_2ik)
 mean_h_1000_hik <- mean(h_1000_hik)
 mean_h_1000_cv <- mean(h_1000_cv)
 
+# mean effective sample size over replicates
 mean_n_h_1000_ik <- mean(n_1000_h_ik)
 mean_n_h_1000_2ik <- mean(n_1000_h_2ik)
 mean_n_h_1000_hik <- mean(n_1000_h_hik)
 mean_n_h_1000_cv <- mean(n_1000_h_cv)
 
-# Visualization of MSE in dependence of bandwidth 
+# visualization of MSE in dependence of bandwidth 
 data1000 = data.frame(sample_size = c(1000, 1000, 1000, 1000),
                       sample_within_h = c(mean_n_h_1000_ik,mean_n_h_1000_2ik, mean_n_h_1000_hik, mean_n_h_1000_cv),
                       procedure = c("IK", "2IK", "hIK", "CV" ),
@@ -621,14 +633,14 @@ writeLines(latex_1000, file.path("latex_1000.txt"))
 ################################################################################
 # (6) Plot MSE, bias and variance for increasing sample size #
 
-
+# create data set for IK bandwidth with all sample sizes
 data_ik = data.frame(sample_size = c(100, 200, 500, 1000),
                      bias_ik = c(bias_ate_100_ik, bias_ate_200_ik, bias_ate_500_ik, bias_ate_1000_ik),
                      var_ik = c(var_ate_100_ik, var_ate_200_ik, var_ate_500_ik, var_ate_1000_ik),
                      mse_ik = c(mse_ate_100_ik, mse_ate_200_ik, mse_ate_500_ik, mse_ate_1000_ik)
 )
 
-
+# plot Figure 5
 ggplot(data_ik, aes(x = sample_size)) +
   geom_line(aes(y = mse_ik, color = "MSE"), size = 0.5) +
   geom_line(aes(y = bias_ik, color = "Bias"), size =0.5) +
@@ -647,7 +659,8 @@ ggsave("bvm_ik.pdf")
 latex_ik <- stargazer(data_ik, summary = FALSE)
 writeLines(latex_ik, file.path("latex_ik.txt"))
 
-####
+#### Do the same for other bandwidths (not included in thesis) ###
+# 2IK #
 data_2ik = data.frame(sample_size = c(100, 200, 500, 1000),
                       bias_2ik = c(bias_ate_100_2ik, bias_ate_200_2ik, bias_ate_500_2ik, bias_ate_1000_2ik),
                       var_2ik = c(var_ate_100_2ik, var_ate_200_2ik, var_ate_500_2ik, var_ate_1000_2ik),
@@ -670,7 +683,7 @@ ggsave("bvm_2ik.pdf")
 latex_2ik <- stargazer(data_2ik, summary = FALSE)
 writeLines(latex_2ik, file.path("latex_2ik.txt"))
 
-####
+# hIK #
 data_hik = data.frame(sample_size = c(200, 500, 1000),
                       bias_hik = c(bias_ate_200_hik, bias_ate_500_hik, bias_ate_1000_hik),
                       var_hik = c(var_ate_200_hik, var_ate_500_hik, var_ate_1000_hik),
@@ -693,7 +706,7 @@ ggsave("bvm_hik.pdf")
 latex_hik <- stargazer(data_hik, summary = FALSE)
 writeLines(latex_hik, file.path("latex_hik.txt"))
 
-###
+# CV # 
 data_cv = data.frame(sample_size = c(100, 200, 500, 1000),
                      bias_cv = c(bias_ate_100_cv, bias_ate_200_cv, bias_ate_500_cv, bias_ate_1000_cv),
                      var_cv = c(var_ate_100_cv, var_ate_200_cv, var_ate_500_cv, var_ate_1000_cv),
@@ -715,8 +728,3 @@ ggsave("bvm_cv.pdf")
 # Save in Latex Table
 latex_cv <- stargazer(data_cv, summary = FALSE)
 writeLines(latex_cv, file.path("latex_cv.txt"))
-####
-
-
-
-
